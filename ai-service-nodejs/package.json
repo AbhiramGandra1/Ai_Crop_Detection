@@ -1,0 +1,12 @@
+{
+  "name": "agrivision-ai-vision-service",
+  "version": "1.0.0",
+  "description": "Node.js AI Vision Inference Microservice for Leaf Disease Classification",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

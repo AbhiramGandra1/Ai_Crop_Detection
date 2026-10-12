@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: #030712;
+    color: #f3f4f6;
+  }
+}
+
+/* High Contrast Sunlight Mode for Outdoor Field Usage */
+body.sunlight-mode {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+body.sunlight-mode .bg-slate-900,
+body.sunlight-mode .bg-slate-950,
+body.sunlight-mode .bg-slate-900\/80,
+body.sunlight-mode .bg-slate-900\/90 {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1) !important;
+}
+
+body.sunlight-mode .text-slate-400,
+body.sunlight-mode .text-slate-300 {
+  color: #334155 !important;
+}
+
+body.sunlight-mode .text-slate-200,
+body.sunlight-mode .text-slate-100,
+body.sunlight-mode .text-white {
+  color: #0f172a !important;
+}
+
+body.sunlight-mode .bg-slate-800 {
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+body.sunlight-mode .border-slate-800,
+body.sunlight-mode .border-slate-700 {
+  border-color: #cbd5e1 !important;
+}
+
+/* Print Styles for Agronomy Health Report */
+@media print {
+  body {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  .print-page {
+    box-shadow: none !important;
+    border: 1px solid #000 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+}

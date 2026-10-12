@@ -1,0 +1,105 @@
+# Docker Compose for AI-Based Crop Disease Detection & Intelligent Fertilizer Recommendation System
+# Architecture:
+# - springboot-backend: Java 21 Spring Boot REST API (Port 8080)
+# - node-ai-service: Node.js / TensorFlow / ONNX Leaf Computer Vision Service (Port 5000)
+# - postgres-db: PostgreSQL 16 Database for Farmer, Soil, Crop & Recommendation Records (Port 5432)
+# - frontend-web: React + Tailwind CSS Farmer Web Portal (Port 3000)
+
+version: '3.8'
+
+services:
+  # ============================================================================
+  # 1. PostgreSQL Database Service
+  # ============================================================================
+  postgres-db:
+    image: postgres:16-alpine
+    container_name: agrivision-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: agrivision_db
+      POSTGRES_USER: agri_admin
+      POSTGRES_PASSWORD: AgriSecurePassword123!
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./backend/init-scripts:/docker-entrypoint-initdb.d
+    networks:
+      - agrivision-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agri_admin -d agrivision_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================================================
+  # 2. Java Spring Boot Backend Service (Core Business & Agronomy Engine)
+  # ============================================================================
+  springboot-backend:
+    build:
+      context: ./backend-springboot
+      dockerfile: Dockerfile
+    container_name: agrivision-springboot-api
+    restart: on-failure
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/agrivision_db
+      SPRING_DATASOURCE_USERNAME: agri_admin
+      SPRING_DATASOURCE_PASSWORD: AgriSecurePassword123!
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
+      AI_SERVICE_URL: http://node-ai-service:5000/api/predict
+      SERVER_PORT: 8080
+      JWT_SECRET: c7902d847b31278f309a489dc74f9d2a84391cf8e9c4b12398bfae345892c90e
+    networks:
+      - agrivision-network
+
+  # ============================================================================
+  # 3. Node.js AI Image Inference Microservice (Crop Disease Vision Model)
+  # ============================================================================
+  node-ai-service:
+    build:
+      context: ./ai-service-nodejs
+      dockerfile: Dockerfile
+    container_name: agrivision-ai-vision
+    restart: on-failure
+    ports:
+      - "5000:5000"
+    environment:
+      PORT: 5000
+      MODEL_PATH: ./models/crop_disease_model.onnx
+      CONFIDENCE_THRESHOLD: 0.75
+    networks:
+      - agrivision-network
+
+  # ============================================================================
+  # 4. Frontend Web Portal (Accenture Agritech React Single-Page Application)
+  # ============================================================================
+  frontend-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: agrivision-web-ui
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      VITE_SPRINGBOOT_API_URL: http://localhost:8080/api/v1
+      VITE_AI_SERVICE_URL: http://localhost:5000/api
+    depends_on:
+      - springboot-backend
+      - node-ai-service
+    networks:
+      - agrivision-network
+
+volumes:
+  pgdata:
+    driver: local
+
+networks:
+  agrivision-network:
+    driver: bridge

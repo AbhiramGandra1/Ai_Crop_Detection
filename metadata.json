@@ -1,0 +1,6 @@
+{
+  "name": "AgriVision AI - Crop Disease & Soil Fertilizer Recommendation",
+  "description": "AI-based crop leaf disease detection, soil nutrient analysis, intelligent fertilizer recommendation system, and simulated seed database with Spring Boot architecture.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
