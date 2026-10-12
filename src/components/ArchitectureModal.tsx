@@ -26,7 +26,8 @@ export const ArchitectureModal: React.FC<ArchitectureModalProps> = ({
   isOpen,
   onClose
 }) => {
-  const [activeTab, setActiveTab] = useState<'docker' | 'erd' | 'endpoints' | 'logs' | 'vscode'>('vscode');
+  const [activeTab, setActiveTab] = useState<'docker' | 'erd' | 'endpoints' | 'logs' | 'vscode' | 'java'>('vscode');
+  const [selectedJavaFile, setSelectedJavaFile] = useState<string>('engine');
   const [copied, setCopied] = useState(false);
   const [gitCopied, setGitCopied] = useState(false);
   const [testEndpoint, setTestEndpoint] = useState<string>('recommend');
@@ -187,6 +188,18 @@ networks:
           </button>
 
           <button
+            onClick={() => setActiveTab('java')}
+            className={`py-3 px-3 transition border-b-2 flex items-center gap-2 whitespace-nowrap ${
+              activeTab === 'java'
+                ? 'border-amber-500 text-amber-400 font-bold'
+                : 'border-transparent text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Code2 className="w-4 h-4 text-amber-400" />
+            <span>Java Spring Boot Code (26 Files)</span>
+          </button>
+
+          <button
             onClick={() => setActiveTab('docker')}
             className={`py-3 px-3 transition border-b-2 flex items-center gap-2 whitespace-nowrap ${
               activeTab === 'docker'
@@ -336,6 +349,297 @@ networks:
                 <div className="rounded-lg bg-slate-900 p-2.5 font-mono text-xs text-emerald-400 font-bold">
                   docker compose up --build
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* Java Spring Boot Source Code Inspector Tab */}
+          {activeTab === 'java' && (
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div>
+                  <h4 className="font-bold text-sm text-white flex items-center gap-2">
+                    <span className="text-amber-400 font-mono">26 Java Source Files</span>
+                    <span>• Spring Boot 3.2 Enterprise Structure</span>
+                  </h4>
+                  <p className="text-xs text-slate-400">
+                    Includes Entities, Spring Data JPA Repositories, REST Controllers, Agronomy Service, and Maven POM.
+                  </p>
+                </div>
+
+                <a
+                  href="/agrivision-project.zip"
+                  download="agrivision-project.zip"
+                  className="px-3.5 py-1.5 rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/30 hover:bg-amber-500/20 text-xs font-semibold flex items-center gap-1.5 transition"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Download Full .java Project</span>
+                </a>
+              </div>
+
+              {/* File selector pill bar */}
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+                {[
+                  { id: 'engine', label: 'AgronomyEngineService.java', type: 'Service' },
+                  { id: 'controller', label: 'FertilizerRecommendationController.java', type: 'Controller' },
+                  { id: 'farmer', label: 'Farmer.java', type: 'Entity' },
+                  { id: 'soil', label: 'SoilTest.java', type: 'Entity' },
+                  { id: 'repo', label: 'RecommendationRepository.java', type: 'Repository' },
+                  { id: 'pom', label: 'pom.xml', type: 'Maven' }
+                ].map((f) => (
+                  <button
+                    key={f.id}
+                    onClick={() => setSelectedJavaFile(f.id)}
+                    className={`px-3 py-1.5 rounded-lg border text-left whitespace-nowrap transition flex items-center gap-1.5 ${
+                      selectedJavaFile === f.id
+                        ? 'border-amber-500 bg-amber-950/40 text-amber-300 font-bold'
+                        : 'border-slate-800 bg-slate-950 text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    <span className="text-[10px] opacity-75 font-mono">[{f.type}]</span>
+                    <span>{f.label}</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Code viewer box */}
+              <div className="rounded-xl bg-slate-950 border border-slate-800 p-4 font-mono text-xs text-amber-200/90 overflow-x-auto shadow-inner max-h-96 leading-relaxed">
+                {selectedJavaFile === 'engine' && (
+                  <pre>{`package com.agrivision.service;
+
+import com.agrivision.entity.Crop;
+import com.agrivision.entity.Farmer;
+import com.agrivision.entity.SoilTest;
+import org.springframework.stereotype.Service;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.*;
+
+@Service
+public class AgronomyEngineService {
+
+    private static final BigDecimal HA_TO_ACRE = BigDecimal.valueOf(0.4047);
+
+    public Map<String, Object> calculateNutrientRecommendation(Farmer farmer, Crop crop, SoilTest soil) {
+        BigDecimal farmAcres = farmer.getFarmSizeAcres() != null ? farmer.getFarmSizeAcres() : BigDecimal.valueOf(1.0);
+
+        // Stoichiometric Crop targets (kg/ha)
+        BigDecimal optN = crop.getOptimumN();
+        BigDecimal optP = crop.getOptimumP();
+        BigDecimal optK = crop.getOptimumK();
+
+        // Available soil test
+        BigDecimal actN = soil.getnValue();
+        BigDecimal actP = soil.getpValue();
+        BigDecimal actK = soil.getkValue();
+
+        // Deficits in kg/ha
+        BigDecimal nDeficitHa = optN.subtract(actN).max(BigDecimal.ZERO);
+        BigDecimal pDeficitHa = optP.subtract(actP).max(BigDecimal.ZERO);
+        BigDecimal kDeficitHa = optK.subtract(actK).max(BigDecimal.ZERO);
+
+        // Convert to per-acre pure nutrient deficit
+        BigDecimal nDeficitAcre = nDeficitHa.multiply(HA_TO_ACRE).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal pDeficitAcre = pDeficitHa.multiply(HA_TO_ACRE).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal kDeficitAcre = kDeficitHa.multiply(HA_TO_ACRE).setScale(2, RoundingMode.HALF_UP);
+
+        // DAP (18-46-0) Calculation
+        BigDecimal dapKgAcre = pDeficitAcre.divide(BigDecimal.valueOf(0.46), 0, RoundingMode.CEILING);
+        BigDecimal nSuppliedByDap = dapKgAcre.multiply(BigDecimal.valueOf(0.18));
+
+        // Urea (46% N) Calculation for remaining N
+        BigDecimal remNAcre = nDeficitAcre.subtract(nSuppliedByDap).max(BigDecimal.ZERO);
+        BigDecimal ureaKgAcre = remNAcre.divide(BigDecimal.valueOf(0.46), 0, RoundingMode.CEILING);
+
+        // MOP (60% K2O) Calculation
+        BigDecimal mopKgAcre = kDeficitAcre.divide(BigDecimal.valueOf(0.60), 0, RoundingMode.CEILING);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("recommendation_id", System.currentTimeMillis());
+        response.put("farmer_id", farmer.getFarmerId());
+        response.put("n_deficit_acre", nDeficitAcre);
+        response.put("p_deficit_acre", pDeficitAcre);
+        response.put("k_deficit_acre", kDeficitAcre);
+        response.put("dap_kg_per_acre", dapKgAcre);
+        response.put("urea_kg_per_acre", ureaKgAcre);
+        response.put("mop_kg_per_acre", mopKgAcre);
+        return response;
+    }
+}`}</pre>
+                )}
+
+                {selectedJavaFile === 'controller' && (
+                  <pre>{`package com.agrivision.controller;
+
+import com.agrivision.dto.ApiResponse;
+import com.agrivision.dto.SoilTestRequestDto;
+import com.agrivision.entity.Crop;
+import com.agrivision.entity.Farmer;
+import com.agrivision.entity.SoilTest;
+import com.agrivision.repository.*;
+import com.agrivision.service.AgronomyEngineService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/v1/fertilizer-recommendations")
+@CrossOrigin(origins = "*")
+public class FertilizerRecommendationController {
+
+    @Autowired
+    private AgronomyEngineService agronomyEngineService;
+
+    @Autowired
+    private FarmerRepository farmerRepository;
+
+    @Autowired
+    private CropRepository cropRepository;
+
+    @PostMapping("/calculate")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> calculateRecommendation(
+            @RequestBody SoilTestRequestDto request) {
+
+        Farmer farmer = farmerRepository.findById(request.getFarmerId()).orElseThrow();
+        Crop crop = cropRepository.findById(request.getCropId()).orElseThrow();
+
+        SoilTest soilTest = new SoilTest();
+        soilTest.setFarmer(farmer);
+        soilTest.setnValue(request.getnValue());
+        soilTest.setpValue(request.getpValue());
+        soilTest.setkValue(request.getkValue());
+        soilTest.setPh(request.getPh());
+        soilTest.setSoilType(request.getSoilType());
+
+        Map<String, Object> result = agronomyEngineService.calculateNutrientRecommendation(farmer, crop, soilTest);
+        return ResponseEntity.ok(ApiResponse.success("Recommendation generated", result));
+    }
+}`}</pre>
+                )}
+
+                {selectedJavaFile === 'farmer' && (
+                  <pre>{`package com.agrivision.entity;
+
+import jakarta.persistence.*;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "farmer")
+public class Farmer {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "farmer_id")
+    private Long farmerId;
+
+    @Column(name = "name", nullable = false, length = 150)
+    private String name;
+
+    @Column(name = "phone", nullable = false, unique = true, length = 20)
+    private String phone;
+
+    @Column(name = "location", nullable = false, length = 200)
+    private String location;
+
+    @Column(name = "farm_size_acres", precision = 6, scale = 2)
+    private BigDecimal farmSizeAcres = BigDecimal.valueOf(2.50);
+
+    @Column(name = "preferred_language", length = 20)
+    private String preferredLanguage = "en";
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    // Standard Getters & Setters
+}`}</pre>
+                )}
+
+                {selectedJavaFile === 'soil' && (
+                  <pre>{`package com.agrivision.entity;
+
+import jakarta.persistence.*;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "soil_test")
+public class SoilTest {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "soil_id")
+    private Long soilId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "farmer_id", nullable = false)
+    private Farmer farmer;
+
+    @Column(name = "n_value", nullable = false, precision = 6, scale = 2)
+    private BigDecimal nValue;
+
+    @Column(name = "p_value", nullable = false, precision = 6, scale = 2)
+    private BigDecimal pValue;
+
+    @Column(name = "k_value", nullable = false, precision = 6, scale = 2)
+    private BigDecimal kValue;
+
+    @Column(name = "ph", nullable = false, precision = 3, scale = 1)
+    private BigDecimal ph;
+
+    @Column(name = "soil_type", nullable = false, length = 50)
+    private String soilType;
+
+    @Column(name = "tested_at")
+    private LocalDateTime testedAt = LocalDateTime.now();
+}`}</pre>
+                )}
+
+                {selectedJavaFile === 'repo' && (
+                  <pre>{`package com.agrivision.repository;
+
+import com.agrivision.entity.Recommendation;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import java.util.List;
+
+@Repository
+public interface RecommendationRepository extends JpaRepository<Recommendation, Long> {
+    List<Recommendation> findByFarmerFarmerIdOrderByDateDesc(Long farmerId);
+}`}</pre>
+                )}
+
+                {selectedJavaFile === 'pom' && (
+                  <pre>{`<project xmlns="http://maven.apache.org/POM/4.0.0">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.2.4</version>
+    </parent>
+    <groupId>com.agrivision</groupId>
+    <artifactId>agrivision-backend</artifactId>
+    <version>1.0.0</version>
+    <properties>
+        <java.version>21</java.version>
+    </properties>
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+        </dependency>
+    </dependencies>
+</project>`}</pre>
+                )}
               </div>
             </div>
           )}
